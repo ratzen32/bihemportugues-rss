@@ -1,8 +1,8 @@
-name: Bósnia Notícias → @bihemportugues
+name: Bósnia → @bihemportugues
 
 on:
   schedule:
-    - cron: '*/30 * * * *'    # a cada 30 minutos
+    - cron: '*/30 * * * *'
   workflow_dispatch:
 
 jobs:
@@ -33,20 +33,17 @@ import time
 RSS_URL = "https://www.google.com/alerts/feeds/15026164443771540408/3341581347118433992"
 
 # Obter Bearer Token
-token_url = "https://api.x.com/2/oauth2/token"
-data = {
+r = requests.post("https://api.x.com/2/oauth2/token", data={
     "grant_type": "client_credentials",
     "client_id": os.environ["CLIENT_ID"],
     "client_secret": os.environ["CLIENT_SECRET"]
-}
-r = requests.post(token_url, data=data)
+})
 bearer = r.json().get("access_token")
 
 feed = feedparser.parse(RSS_URL)
 
 for entry in feed.entries[:3]:
     text = f"📰 {entry.title}\n\n{entry.get('summary', '')[:140]}...\n\n🔗 {entry.link}\n\n#Bósnia #Bosnia #Balkans"
-
     if len(text) > 280:
         text = text[:277] + "..."
 
@@ -57,5 +54,5 @@ for entry in feed.entries[:3]:
     )
     time.sleep(10)
 
-print("✅ Posts enviados!")
+print("✅ Feito!")
 EOF
