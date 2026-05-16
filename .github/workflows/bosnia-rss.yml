@@ -32,7 +32,6 @@ import time
 
 RSS_URL = "https://www.google.com/alerts/feeds/15026164443771540408/3341581347118433992"
 
-# Obter Bearer Token
 r = requests.post("https://api.x.com/2/oauth2/token", data={
     "grant_type": "client_credentials",
     "client_id": os.environ["CLIENT_ID"],
