@@ -1,10 +1,55 @@
-name: Teste Bósnia
+name: Bósnia → @bihemportugues
 
 on:
+  schedule:
+    - cron: '*/30 * * * *'
   workflow_dispatch:
 
 jobs:
   post:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Testando automação"
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalar dependências
+        run: pip install feedparser requests
+
+      - name: Executar automação
+        env:
+          CLIENT_ID: ${{ secrets.X_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.X_CLIENT_SECRET }}
+        run: |
+          python - << 'EOF'
+import feedparser
+import requests
+import os
+import time
+
+RSS_URL = "https://www.google.com/alerts/feeds/15026164443771540408/3341581347118433992"
+
+# Pega o token
+r = requests.post("https://api.x.com/2/oauth2/token", data={
+    "grant_type": "client_credentials",
+    "client_id": os.environ["CLIENT_ID"],
+    "client_secret": os.environ["CLIENT_SECRET"]
+})
+bearer = r.json().get("access_token")
+
+feed = feedparser.parse(RSS_URL)
+
+for entry in feed.entries[:3]:
+    text = f"📰 {entry.title}\n\n{entry.get('summary', '')[:140]}...\n\n🔗 {entry.link}\n\n#Bósnia #Bosnia"
+    if len(text) > 280:
+        text = text[:277] + "..."
+    requests.post("https://api.x.com/2/tweets", 
+                  headers={"Authorization": f"Bearer {bearer}"}, 
+                  json={"text": text})
+    time.sleep(10)
+
+print("✅ Feito!")
+EOF
