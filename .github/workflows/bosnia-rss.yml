@@ -10,23 +10,40 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install feedparser requests
-      - name: Postar
+
+      - name: Instalar dependências
+        run: pip install feedparser requests
+
+      - name: Executar automação
         env:
           CLIENT_ID: ${{ secrets.X_CLIENT_ID }}
           CLIENT_SECRET: ${{ secrets.X_CLIENT_SECRET }}
         run: |
           python - << 'EOF'
-import feedparser,requests,os,time
-u="https://www.google.com/alerts/feeds/15026164443771540408/3341581347118433992"
-b=requests.post("https://api.x.com/2/oauth2/token",data={"grant_type":"client_credentials","client_id":os.environ["CLIENT_ID"],"client_secret":os.environ["CLIENT_SECRET"]}).json().get("access_token")
-for e in feedparser.parse(u).entries[:3]:
- t=f"📰 {e.title}\n\n{e.get('summary','')[:140]}...\n\n🔗 {e.link}\n\n#Bósnia"
- if len(t)>280: t=t[:277]+"..."
- requests.post("https://api.x.com/2/tweets",headers={"Authorization":f"Bearer {b}"},json={"text":t})
- time.sleep(10)
-print("✅ Feito!")
-EOF
+import feedparser
+import requests
+import os
+import time
+
+RSS_URL = "https://www.google.com/alerts/feeds/15026164443771540408/3341581347118433992"
+
+r = requests.post("https://api.x.com/2/oauth2/token", data={
+    "grant_type": "client_credentials",
+    "client_id": os.environ["CLIENT_ID"],
+    "client_secret": os.environ["CLIENT_SECRET"]
+})
+bearer = r.json().get("access_token")
+
+feed = feedparser.parse(RSS_URL)
+
+for entry in feed.entries[:3]:
+    text = f"📰 {entry.title}\n\n{entry.get('summary', '')[:140]}...\n\n🔗 {entry.link}\n\n#Bósnia #Bosnia"
+    if len(text) > 280:
+        text = text[:277] + "..."
+    requests.post(
+        "https://api.x.com
